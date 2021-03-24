@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export SMOKING=${SMOKING:-""}
+
+echo "$0: running smoke tests..."
+echo "$0: generating random mnemonic.."
+MNEMONIC=$(python3 -c "import buidl; print(buidl.secure_mnemonic())")
+echo "$0: -> $MNEMONIC"
+
+PRIV=$(python3 -c "import buidl; print(buidl.hd.HDPrivateKey.from_mnemonic('$MNEMONIC'))")
+echo "$0: -> $PRIV"
+
+echo "$0: restoring from known seed.."
+python3 -c "\
+from buidl.hd import HDPrivateKey; \
+seed=bytes.fromhex('975fbce0a9b1b14a0b5127dc7dae113f8ea5c62e5e77156d9b1d1729983cbba29cbe9ced76aaf343a596bf17a738887089873432903d83537a3be823c5563a0b'); \
+mnemonic='little fix library dash little autumn during zebra slim slide slab all'; \
+\
+xprv='xprv9s21ZrQH143K3bF93eBXf4dAVqzrNWvehM1xANzsCkYshgv8xWwk6WABvAMxdG6bkqtQzq3zNabeQjoCsN42L4VidmEmXcD558y6ryw6Cke'; \
+assert HDPrivateKey.from_seed(seed).xprv() == xprv, xprv; \
+print('  -> seed generates expected xprv'); \
+\
+assert HDPrivateKey.from_mnemonic(mnemonic).xprv() == xprv, xprv; \
+print('  -> mnemonic generates expected xprv'); \
+\
+xprv='xprv9yTUJ6ZE8aJND987QzgZz24H2HBQXgfrMVV1gm5RDYYcsHhYv6jD3XPtFNtk65miaE48ycxiQ4eLhUG8NHCWHrjTSL94n1VEPvtkLQe2Zyh'; \
+xpub='xpub6CSphc67xwrfRdCaX2DaMA11aK1tw9PhiiQcV9V2mt5bk62hTe3TbKiN6f5AdnjmHQPGJwBv7uJ4HHaygKYuYYdMkroxS6jmZu4ZN3oX9hU'; \
+path='m/44h/0h/0h'; \
+assert HDPrivateKey.from_seed(seed).traverse(path).xprv() == xprv, xprv; \
+print('  -> seed generates expected', path, 'xprv'); \
+assert HDPrivateKey.from_seed(seed).traverse(path).xpub() == xpub, xpub; \
+print('  -> seed generates expected', path, 'xpub'); \
+
+xprv='xprvA1sQGNg8rw8QoHiiVs8VJSf4AFz4irLS8wFnWVFcNbNJ9ynke45meci2Pe48VggjMLru3CvnoYRn36DmjEyKaAFQwKR3QmMUSqCRCgQSFio'
+xpub='xpub6ErkftD2hJgi1moBbtfVfabniHpZ8K4HWABPJsfDvvuH2n7uBbQ2CR2WEuPp96LZqwYG9CLhApEAv1esvF2PTsx7mQLRNeL6pC4dJbHQjYV'
+path='m/44h/0h/0h/0'; \
+assert HDPrivateKey.from_seed(seed).traverse(path).xprv() == xprv, xprv; \
+print('  -> seed generates expected', path, 'xprv'); \
+assert HDPrivateKey.from_seed(seed).traverse(path).xpub() == xpub, xpub; \
+print('  -> seed generates expected', path, 'xpub'); \
+
+path='m/44h/0h/0h/0/0'; \
+addr='1HCL6sE57BiJHSn7k1khG7uJNtLBe5pn5L'; \
+wif='L4nt94rMwtmNhGnAUX5MXBXGyH75YNgHf3EnK9Zrx4qw66wwMXJU'; \
+pub='03b32d01b84bf3f34bef2fb298813d46d5cbfe6ee8ca50569b95b9c36b6a12e302'; \
+assert HDPrivateKey.from_seed(seed).traverse(path).address() == addr, addr; \
+print('  -> seed generates expected', path, 'addr', addr); \
+assert HDPrivateKey.from_seed(seed).traverse(path).private_key.wif() == wif, wif; \
+print('  -> seed generates expected', path, 'wif', wif); \
+assert HDPrivateKey.from_seed(seed).traverse(path).private_key.point.sec().hex() == pub, pub; \
+print('  -> seed generates expected', path, 'pub', pub); \
+"
+
+echo "$0: smoke tests pass!"
+echo
+[[ $SMOKING -eq "1" ]] && exit 0
+
+echo "$0: running unit tests..."
+pytest
+echo "$0: unit tests pass!"
+exit 0
