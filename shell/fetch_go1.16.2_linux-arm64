@@ -1,0 +1,20 @@
+set -euo pipefail
+
+VERSION=1.16.2
+SHA256SUM=6924601d998a0917694fd14261347e3798bd2ad6b13c4d7f2edd70c9d57f62ab
+
+INSTALL=${INSTALL:-""}
+[[ $INSTALL ]] && {
+	echo "$0 --> installing package.."
+	tar -C /usr/local -xzf go${VERSION}.linux-arm64.tar.gz
+	echo "$0 --> packages installed at /usr/local/go/:"
+	echo "$0   --> $(cat /usr/local/go/VERSION)"
+	exit 0
+}
+
+echo "--> $0: fetching binary.."
+curl -LO https://golang.org/dl/go${VERSION}.linux-arm64.tar.gz
+
+echo "--> $0: checking integrity of package.."
+echo "$SHA256SUM go${VERSION}.linux-arm64.tar.gz" | sha256sum --check
+

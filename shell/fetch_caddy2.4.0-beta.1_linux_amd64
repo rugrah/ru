@@ -1,0 +1,19 @@
+set -euo pipefail
+
+VERSION=v2.4.0-beta.1
+
+echo "$0 --> fetching sources.."
+mkdir -p ${HOME}/bin/github.com/caddyserver
+cd $HOME/src/github.com/caddyserver
+
+[[ -d caddy ]] || git clone https://github.com/caddyserver/caddy.git
+cd caddy/cmd/caddy
+git checkout $VERSION
+
+echo "$0 --> building package.."
+GO_ENABLED=0 GOARCH=amd64 go build .
+
+mv -iv caddy $HOME/bin/
+
+echo "$0 --> binary built at $HOME/bin/caddy"
+echo "$0   --> $(file $HOME/bin/caddy)"

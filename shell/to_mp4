@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if ls *.MOV 2</dev/null; then
+  for v in *.MOV; do
+    ffmpeg -i "$v" -vcodec copy -acodec copy -scodec mov_text "${v%.MOV}.mp4" ||
+      ffmpeg -i "$v" -vcodec copy -c:a aac -scodec mov_text "${v%.MOV}.mp4" ||
+      ffmpeg -i "$v" -c:v libx264 -acodec copy -scodec mov_text "${v%.MOV}.mp4"
+  done
+fi
+
+if ls *.mkv 2</dev/null; then
+  for v in *.mkv; do
+    ffmpeg -i "$v" -vcodec copy -acodec copy -scodec mov_text "${v%.mkv}.mp4" ||
+      ffmpeg -i "$v" -vcodec copy -c:a aac -scodec mov_text "${v%.mkv}.mp4" ||
+      ffmpeg -i "$v" -c:v libx264 -acodec copy -scodec mov_text "${v%.mkv}.mp4"
+  done
+fi
+
+if ls *.webm 2>/dev/null; then
+  for  v in *.webm; do
+    ffmpeg -i "$v" -vcodec libx264 "${v%.webm}.mp4"
+  done
+fi

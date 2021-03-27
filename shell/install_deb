@@ -1,0 +1,2 @@
+dpkg --info *.deb
+dpkg -i containerd.io_1.4.4-1_arm64.deb
