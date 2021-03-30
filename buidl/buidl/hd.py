@@ -33,13 +33,26 @@ TESTNET_ZPUB = bytes.fromhex("045f1cf6")
 
 class AddressHelper(object):
     @classmethod
-    def get(cls, xprv, index, account=0):
-        return xprv.traverse('m/84h/0h/0h/{}/{}'.format(account, index)).bech32_address()
+    def get(cls, xprv, index, internal=0):
+        """Fetch the bech32 address at given index for given xprv.
+
+        If internal is specified and set to 1, external / change address is returned.
+        """
+
+        return xprv.traverse('m/84h/0h/0h/{}/{}'.format(internal, index)).bech32_address()
 
     @classmethod
-    def get_desc(cls, xprv, num, account=0):
-        out = ['addr({})'.format(cls.get(xprv, index, account=account)) for index in range(num)]
-        return json.dumps(out)
+    def get_desc(cls, xprv, num):
+        """Fetch a descriptor for the first num bech32 addresses at standard path for given xprv.
+        
+        Both internal and external addresses for m/84'/0'/0'/<internal>/<num> are returned.
+        """
+
+        addrs = []
+        for internal in (0, 1):
+            for index in range(num):
+                addrs.append('addr({})'.format(cls.get(xprv, index, internal=internal)))
+        return json.dumps(addrs)
 
 
 class HDPrivateKey(object):
